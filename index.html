@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#03050b" />
+    <title>Ethiopia | Immersive Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/" } }
+    </script>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="scene"></canvas>
+      <section class="hud" aria-label="Ethiopia Immersive Atlas controls">
+        <header class="topbar">
+          <a class="brand" href="#" aria-label="Ethiopia Immersive Atlas home">
+            <span class="brand-mark"><i></i><i></i><i></i></span>
+            <span>ETHIOPIA<br /><em>IMMERSIVE ATLAS</em></span>
+          </a>
+          <div class="location-readout"><span class="pulse"></span> EAST AFRICA / 9.145° N, 40.489° E</div>
+          <button id="enter-vr" class="vr-button">ENTER VR <span>↗</span></button>
+        </header>
+
+        <div class="intro" id="intro">
+          <p class="eyebrow">A NEW PERSPECTIVE</p>
+          <h1>Find the <em>extraordinary.</em></h1>
+          <p class="lede">A living landscape of ancient stone, highland light, and stories waiting to be encountered.</p>
+          <div class="intro-line"><span></span><b>04</b> remarkable places</div>
+        </div>
+
+        <aside id="place-card" class="place-card" aria-live="polite">
+          <button id="close-card" class="close-card" aria-label="Close place details">×</button>
+          <div id="card-image" class="card-image"></div>
+          <div class="card-copy">
+            <p id="card-region" class="eyebrow"></p>
+            <h2 id="card-title"></h2>
+            <p id="card-description"></p>
+            <div class="card-footer"><span>EXPLORE IN VR</span><span>→</span></div>
+          </div>
+        </aside>
+
+        <footer class="footer">
+          <p><kbd>◉</kbd> SELECT A RAY TO DISCOVER</p>
+          <p class="desktop-help">DRAG TO LOOK · SCROLL TO MOVE</p>
+          <button id="sound-toggle" aria-label="Toggle ambient sound">⌁ <span>SOUND ON</span></button>
+        </footer>
+      </section>
+      <div id="loading" class="loading"><span></span> LOADING THE ATLAS</div>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
