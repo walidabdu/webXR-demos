@@ -56,7 +56,10 @@ const terrainTexture = textureLoader.load('assets/earth-height.jpg');
 const normalTexture = textureLoader.load('assets/earth-normal.jpg');
 earthTexture.colorSpace = THREE.SRGBColorSpace;
 const globeSystem = new THREE.Group(); globeSystem.position.copy(globeCenter); world.add(globeSystem);
-const mapRoot = new THREE.Group(); mapRoot.rotation.y = THREE.MathUtils.degToRad(-50.5); globeSystem.add(mapRoot);
+// Three's equirectangular sphere places 90°E at the forward-facing meridian.
+// Shift by Ethiopia's central longitude so the texture and geographic vectors agree.
+const ethiopiaCentralLongitude = 39.5;
+const mapRoot = new THREE.Group(); mapRoot.rotation.y = THREE.MathUtils.degToRad(ethiopiaCentralLongitude - 90); globeSystem.add(mapRoot);
 const geoLayer = new THREE.Group(); mapRoot.add(geoLayer);
 const globe = new THREE.Mesh(new THREE.SphereGeometry(globeRadius, 192, 128), new THREE.MeshStandardMaterial({
   map: earthTexture, normalMap: normalTexture, normalScale: new THREE.Vector2(.7, .7), bumpMap: terrainTexture, bumpScale: .28, displacementMap: terrainTexture, displacementScale: .11, roughness: .66, metalness: .02
@@ -118,11 +121,12 @@ function drawGeoJson(data, color, opacity, lift) {
   rings.forEach(ring => addGeoLine(ring, color, opacity, lift));
 }
 Promise.all([
-  fetch('assets/ethiopia-boundary.geojson').then(r => r.json()),
-  fetch('assets/ethiopia-regions.geojson').then(r => r.json())
-]).then(([country, regions]) => {
-  drawGeoJson(country, 0xffd173, .95, .14);
-  drawGeoJson(regions, 0xd9eaff, .38, .135);
+  fetch('assets/world-countries.geojson').then(r => r.json()),
+  fetch('assets/ethiopia-boundary.geojson').then(r => r.json())
+]).then(([countries, ethiopia]) => {
+  // Country borders provide familiar global map context; Ethiopia is highlighted above them.
+  drawGeoJson(countries, 0x8aaac7, .33, .125);
+  drawGeoJson(ethiopia, 0xffd173, .98, .15);
 }).catch(() => {});
 // Major river paths provide a readable hydrology layer at this close viewing distance.
 [
