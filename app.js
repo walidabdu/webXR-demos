@@ -69,9 +69,13 @@ const halo = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.075, 96, 72
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('assets/earth.glb', ({ scene: earthModel }) => {
   const bounds = new THREE.Box3().setFromObject(earthModel); const size = bounds.getSize(new THREE.Vector3()); const center = bounds.getCenter(new THREE.Vector3());
-  const pivot = new THREE.Group(); pivot.add(earthModel); earthModel.position.sub(center); pivot.scale.setScalar((globeRadius * 2) / Math.max(size.x, size.y, size.z));
+  const largestDimension = Math.max(size.x, size.y, size.z);
+  // Some downloaded globe GLBs contain a background shell or a non-standard scale.
+  // Keep the verified terrain globe visible until that asset can be explicitly calibrated.
+  if (!Number.isFinite(largestDimension) || largestDimension <= 0) return;
+  const pivot = new THREE.Group(); pivot.add(earthModel); earthModel.position.sub(center); pivot.scale.setScalar((globeRadius * 2) / largestDimension);
   earthModel.traverse(node => { if (node.isMesh) { node.castShadow = false; node.receiveShadow = false; } });
-  mapRoot.add(pivot); globe.visible = false;
+  pivot.visible = false; mapRoot.add(pivot);
 }, undefined, () => {});
 
 const destinations = [
