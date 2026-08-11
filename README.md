@@ -13,3 +13,5 @@ Open `http://localhost:8080`. Desktop controls: drag to look, scroll to move. In
 ## Geographic data
 
 The Ethiopia national and regional outline layers in `assets/` are derived from the public geoBoundaries dataset. Earth color, height, and normal textures are bundled locally so the relief material renders consistently after deployment.
+
+Destination panel photography is sourced from Wikimedia Commons / Wikipedia page-image media, with the Harar image bundled in `assets/harar.jpg`.
