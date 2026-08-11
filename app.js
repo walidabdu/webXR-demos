@@ -32,8 +32,9 @@ const sun = new THREE.DirectionalLight(0xffd28e, 2.4); sun.position.set(-8, 6, 4
 
 const world = new THREE.Group(); scene.add(world);
 const textureLoader = new THREE.TextureLoader();
-const globeCenter = new THREE.Vector3(0, 1.25, -10.6);
-const globeRadius = 4.55;
+// A close Ethiopia-centred viewing distance spreads real site coordinates apart.
+const globeCenter = new THREE.Vector3(0, 0.3, -10.8);
+const globeRadius = 8.5;
 const selectable = [];
 const clock = new THREE.Clock();
 let hovered = null;
@@ -104,42 +105,6 @@ function addDestination(place, index) {
   hit.userData.label = label; hit.userData.seed = index * 1.8;
 }
 destinations.forEach(addDestination);
-
-function addGeoLine(coordinates, color, opacity, lift) {
-  const points = coordinates.map(([lon, lat]) => pointOnGlobe(lat, lon, globeRadius + lift));
-  if (points.length < 2) return;
-  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
-  geoLayer.add(line);
-}
-function drawGeoJson(data, color, opacity, lift) {
-  const rings = [];
-  for (const feature of data.features || []) {
-    const geometry = feature.geometry || {};
-    if (geometry.type === 'Polygon') rings.push(...geometry.coordinates);
-    if (geometry.type === 'MultiPolygon') geometry.coordinates.forEach(polygon => rings.push(...polygon));
-  }
-  rings.forEach(ring => addGeoLine(ring, color, opacity, lift));
-}
-Promise.all([
-  fetch('assets/world-countries.geojson').then(r => r.json()),
-  fetch('assets/ethiopia-boundary.geojson').then(r => r.json())
-]).then(([countries, ethiopia]) => {
-  // Country borders provide familiar global map context; Ethiopia is highlighted above them.
-  drawGeoJson(countries, 0x8aaac7, .33, .125);
-  drawGeoJson(ethiopia, 0xffd173, .98, .15);
-}).catch(() => {});
-// Major river paths provide a readable hydrology layer at this close viewing distance.
-[
-  [[37.32,12.03],[37.42,11.55],[37.36,11.03],[36.92,10.55],[36.30,10.06],[35.48,9.86]],
-  [[38.76,8.99],[39.14,9.32],[39.78,9.42],[40.37,9.86],[40.90,10.67],[41.16,11.42]],
-  [[37.34,7.15],[36.77,6.43],[36.27,5.57],[35.83,4.77]]
-].forEach(river => addGeoLine(river, 0x69c7e8, .7, .145));
-function addCity(name, lat, lon) {
-  const point = pointOnGlobe(lat, lon, globeRadius + .15); const normal = point.clone().normalize();
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(.022, 12, 12), new THREE.MeshBasicMaterial({ color: 0xb9dffd })); dot.position.copy(point); geoLayer.add(dot);
-  const label = makeLabel(name, normal); label.scale.setScalar(.48); label.position.copy(point).addScaledVector(normal, .018); label.visible = true; geoLayer.add(label);
-}
-[['Mekelle',13.49,39.47],['Bahir Dar',11.60,37.39],['Dire Dawa',9.60,41.85],['Adama',8.54,39.27],['Hawassa',7.05,38.48],['Jimma',7.67,36.83]].forEach(city => addCity(...city));
 
 const realPhotos = {
   lalibela: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Lalibela%2C_san_giorgio%2C_esterno_24.jpg/1280px-Lalibela%2C_san_giorgio%2C_esterno_24.jpg',
