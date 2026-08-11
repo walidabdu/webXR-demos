@@ -51,81 +51,118 @@ function makeStars() {
 }
 makeStars();
 
-const earthTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', () => loading.classList.add('done'), undefined, () => loading.classList.add('done'));
-const terrainTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earthbump1k.jpg');
-const normalTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg');
+const earthTexture = textureLoader.load('assets/earth-color.jpg', () => loading.classList.add('done'), undefined, () => loading.classList.add('done'));
+const terrainTexture = textureLoader.load('assets/earth-height.jpg');
+const normalTexture = textureLoader.load('assets/earth-normal.jpg');
 earthTexture.colorSpace = THREE.SRGBColorSpace;
 const globeSystem = new THREE.Group(); globeSystem.position.copy(globeCenter); world.add(globeSystem);
 const globe = new THREE.Mesh(new THREE.SphereGeometry(globeRadius, 192, 128), new THREE.MeshStandardMaterial({
-  map: earthTexture, normalMap: normalTexture, normalScale: new THREE.Vector2(.58, .58), displacementMap: terrainTexture, displacementScale: .065, roughness: .7, metalness: .03
+  map: earthTexture, normalMap: normalTexture, normalScale: new THREE.Vector2(.7, .7), bumpMap: terrainTexture, bumpScale: .28, displacementMap: terrainTexture, displacementScale: .11, roughness: .66, metalness: .02
 }));
 // The texture is offset so the Ethiopian highlands are at the centre of the visitor's view.
-globe.rotation.y = THREE.MathUtils.degToRad(-129.5); globeSystem.add(globe);
+globe.rotation.y = THREE.MathUtils.degToRad(-50.5); globeSystem.add(globe);
 const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.018, 128, 96), new THREE.MeshBasicMaterial({ color: 0x4c9eff, transparent: true, opacity: .12, side: THREE.BackSide, blending: THREE.AdditiveBlending })); globeSystem.add(atmosphere);
 const halo = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.075, 96, 72), new THREE.MeshBasicMaterial({ color: 0x2f7fe8, transparent: true, opacity: .045, side: THREE.BackSide, blending: THREE.AdditiveBlending })); globeSystem.add(halo);
 
 const destinations = [
-  { id: 'lalibela', name: 'Lalibela', region: 'AMHARA HIGHLANDS', lat: 12.03, lon: 39.04, crop: '0% 0%', desc: 'Carved from living rock in the 12th century, Lalibela’s sacred churches form one of the world’s most astonishing pilgrim landscapes.' },
-  { id: 'aksum', name: 'Aksum', region: 'TIGRAY · NORTHERN ETHIOPIA', lat: 14.12, lon: 38.72, crop: '100% 0%', desc: 'Obelisks, royal tombs, and ancient inscriptions trace the legacy of the Aksumite Empire—one of Africa’s great early civilizations.' },
-  { id: 'simien', name: 'Simien Mountains', region: 'AMHARA · UNESCO BIOSPHERE', lat: 13.24, lon: 38.06, crop: '0% 100%', desc: 'Sheer escarpments and endless highland light define this extraordinary range, home to the endemic gelada and Ethiopian wolf.' },
-  { id: 'gondar', name: 'Fasil Ghebbi', region: 'GONDAR · ROYAL ENCLOSURE', lat: 12.60, lon: 37.47, crop: '100% 100%', desc: 'A walled royal compound of soaring castles, gardens, and bathhouses reveals the grandeur of Ethiopia’s seventeenth-century emperors.' }
+  { id: 'lalibela', name: 'Lalibela', region: 'AMHARA HIGHLANDS', lat: 12.03, lon: 39.04, image: 'classic', crop: '0% 0%', desc: 'Carved from living rock in the 12th century, Lalibela’s sacred churches form one of the world’s most astonishing pilgrim landscapes.' },
+  { id: 'aksum', name: 'Aksum', region: 'TIGRAY · NORTHERN ETHIOPIA', lat: 14.12, lon: 38.72, image: 'classic', crop: '100% 0%', desc: 'Obelisks, royal tombs, and ancient inscriptions trace the legacy of the Aksumite Empire—one of Africa’s great early civilizations.' },
+  { id: 'simien', name: 'Simien Mountains', region: 'AMHARA · UNESCO BIOSPHERE', lat: 13.24, lon: 38.06, image: 'classic', crop: '0% 100%', desc: 'Sheer escarpments and endless highland light define this extraordinary range, home to the endemic gelada and Ethiopian wolf.' },
+  { id: 'gondar', name: 'Fasil Ghebbi', region: 'GONDAR · ROYAL ENCLOSURE', lat: 12.60, lon: 37.47, image: 'classic', crop: '100% 100%', desc: 'A walled royal compound of soaring castles, gardens, and bathhouses reveals the grandeur of Ethiopia’s seventeenth-century emperors.' },
+  { id: 'harar', name: 'Harar Jugol', region: 'HARARI · WALLED CITY', lat: 9.31, lon: 42.12, image: 'new', crop: '0% 0%', desc: 'Within Harar’s ancient walls, winding lanes, shrines, and markets hold centuries of Islamic scholarship and living craft traditions.' },
+  { id: 'erta-ale', name: 'Erta Ale', region: 'AFAR · DANAKIL DEPRESSION', lat: 13.60, lon: 40.67, image: 'new', crop: '100% 0%', desc: 'A stark volcanic shield in the Danakil Depression, Erta Ale is famed for its immense caldera and enduring lava lake.' },
+  { id: 'sof-omar', name: 'Sof Omar', region: 'BALE · OROMIA', lat: 6.91, lon: 40.85, image: 'new', crop: '0% 100%', desc: 'The Web River has shaped an extraordinary underground world here: vast limestone chambers, passages, and shafts of light.' },
+  { id: 'addis', name: 'Addis Ababa', region: 'ETHIOPIA’S CAPITAL', lat: 8.98, lon: 38.76, image: 'new', crop: '100% 100%', desc: 'At the foot of Entoto, Addis Ababa brings together a fast-moving capital, deep cultural history, and highland green space.' }
 ];
 
 function pointOnGlobe(lat, lon, r = globeRadius) {
   const latitude = THREE.MathUtils.degToRad(lat), longitude = THREE.MathUtils.degToRad(lon - 39.5);
   return new THREE.Vector3(r * Math.cos(latitude) * Math.sin(longitude), r * Math.sin(latitude), r * Math.cos(latitude) * Math.cos(longitude));
 }
-function makeLabel(text) {
+function makeLabel(text, normal) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 96; const x = c.getContext('2d');
-  x.font = '500 34px DM Mono, monospace'; x.letterSpacing = '3px'; x.fillStyle = '#f8d797'; x.shadowColor = '#000'; x.shadowBlur = 10; x.fillText(text.toUpperCase(), 3, 50);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sprite.scale.set(1.38, .26, 1); return sprite;
+  x.font = '600 31px DM Mono, monospace'; x.fillStyle = '#f8d797'; x.shadowColor = '#000'; x.shadowBlur = 10; x.fillText(text.toUpperCase(), 12, 56);
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(.75, .14), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+  const tangentUp = new THREE.Vector3(0, 1, 0).projectOnPlane(normal).normalize();
+  const tangentRight = new THREE.Vector3().crossVectors(tangentUp, normal).normalize();
+  label.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangentRight, tangentUp, normal));
+  label.visible = false; return label;
 }
 function addDestination(place, index) {
-  const start = pointOnGlobe(place.lat, place.lon);
+  const start = pointOnGlobe(place.lat, place.lon, globeRadius + .12);
   const normal = start.clone().normalize();
-  const end = start.clone().addScaledVector(normal, .72 + index * .08);
-  const lineGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-  const beam = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color: 0xf4bd58, transparent: true, opacity: .82 })); globeSystem.add(beam);
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(.043, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffd373, transparent: true, opacity: .92 })); glow.position.copy(end); globeSystem.add(glow);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(.07, .006, 8, 32), new THREE.MeshBasicMaterial({ color: 0xf7bc55, transparent: true, opacity: .8 })); ring.position.copy(end); ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal); globeSystem.add(ring);
-  // The interaction volume stays comfortable in VR while the visible marker remains precise.
-  const hit = new THREE.Mesh(new THREE.SphereGeometry(.11, 16, 16), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 })); hit.position.copy(end); hit.userData.place = place; hit.userData.ring = ring; hit.userData.glow = glow; selectable.push(hit); globeSystem.add(hit);
-  const labelOffsets = [new THREE.Vector3(-1.15, .63, .10), new THREE.Vector3(1.12, .73, .08), new THREE.Vector3(-1.2, -.62, .16), new THREE.Vector3(1.15, -.78, .12)];
-  const label = makeLabel(place.name); label.position.copy(end).add(labelOffsets[index]); label.center.set(index % 2 ? 0 : 1, .5); globeSystem.add(label);
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(.043, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffd373, transparent: true, opacity: .92 })); glow.position.copy(start); globeSystem.add(glow);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.07, .006, 8, 32), new THREE.MeshBasicMaterial({ color: 0xf7bc55, transparent: true, opacity: .8 })); ring.position.copy(start); ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal); globeSystem.add(ring);
+  // The hit volume is invisible; the marker itself remains on the terrain surface.
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(.11, 16, 16), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 })); hit.position.copy(start); hit.userData.place = place; hit.userData.ring = ring; hit.userData.glow = glow; selectable.push(hit); globeSystem.add(hit);
+  const label = makeLabel(place.name, normal); label.position.copy(start).addScaledVector(normal, .025); globeSystem.add(label);
   hit.userData.label = label; hit.userData.seed = index * 1.8;
 }
 destinations.forEach(addDestination);
 
-const destinationImage = new Image(); destinationImage.src = 'assets/ethiopia-destinations.png';
-destinationImage.onload = () => { if (activePlace) paintVrCard(activePlace); };
+function addGeoLine(coordinates, color, opacity, lift) {
+  const points = coordinates.map(([lon, lat]) => pointOnGlobe(lat, lon, globeRadius + lift));
+  if (points.length < 2) return;
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+  globeSystem.add(line);
+}
+function drawGeoJson(data, color, opacity, lift) {
+  const rings = [];
+  for (const feature of data.features || []) {
+    const geometry = feature.geometry || {};
+    if (geometry.type === 'Polygon') rings.push(...geometry.coordinates);
+    if (geometry.type === 'MultiPolygon') geometry.coordinates.forEach(polygon => rings.push(...polygon));
+  }
+  rings.forEach(ring => addGeoLine(ring, color, opacity, lift));
+}
+Promise.all([
+  fetch('assets/ethiopia-boundary.geojson').then(r => r.json()),
+  fetch('assets/ethiopia-regions.geojson').then(r => r.json())
+]).then(([country, regions]) => {
+  drawGeoJson(country, 0xffd173, .95, .14);
+  drawGeoJson(regions, 0xd9eaff, .38, .135);
+}).catch(() => {});
+// Major river paths provide a readable hydrology layer at this close viewing distance.
+[
+  [[37.32,12.03],[37.42,11.55],[37.36,11.03],[36.92,10.55],[36.30,10.06],[35.48,9.86]],
+  [[38.76,8.99],[39.14,9.32],[39.78,9.42],[40.37,9.86],[40.90,10.67],[41.16,11.42]],
+  [[37.34,7.15],[36.77,6.43],[36.27,5.57],[35.83,4.77]]
+].forEach(river => addGeoLine(river, 0x69c7e8, .7, .145));
+
+const destinationImages = { classic: new Image(), new: new Image() };
+destinationImages.classic.src = 'assets/ethiopia-destinations.png';
+destinationImages.new.src = 'assets/ethiopia-destinations-ii.png';
+Object.values(destinationImages).forEach(image => { image.onload = () => { if (activePlace) paintVrCard(activePlace); }; });
 const vrCanvas = document.createElement('canvas'); vrCanvas.width = 1024; vrCanvas.height = 560; const vrCtx = vrCanvas.getContext('2d');
 const vrCard = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 1.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(vrCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false }));
-vrCard.position.set(4.6, 2.7, -8.0); vrCard.visible = false; world.add(vrCard);
+vrCard.position.set(1.35, 1.48, -1.5); vrCard.visible = false; playerRig.add(vrCard);
 function wrapText(ctx, text, x, y, width, lineHeight) { const words = text.split(' '); let line = ''; for (const word of words) { const next = line + word + ' '; if (ctx.measureText(next).width > width && line) { ctx.fillText(line, x, y); line = word + ' '; y += lineHeight; } else line = next; } ctx.fillText(line, x, y); }
 function paintVrCard(place) {
-  const sx = place.crop.startsWith('100') ? destinationImage.width / 2 : 0, sy = place.crop.endsWith('100%') ? destinationImage.height / 2 : 0;
-  vrCtx.clearRect(0, 0, 1024, 560); vrCtx.fillStyle = 'rgba(4,7,12,.95)'; vrCtx.fillRect(0,0,1024,560); if (destinationImage.complete) vrCtx.drawImage(destinationImage, sx, sy, destinationImage.width / 2, destinationImage.height / 2, 0, 0, 360, 560);
+  const image = destinationImages[place.image];
+  const sx = place.crop.startsWith('100') ? image.width / 2 : 0, sy = place.crop.endsWith('100%') ? image.height / 2 : 0;
+  vrCtx.clearRect(0, 0, 1024, 560); vrCtx.fillStyle = 'rgba(4,7,12,.95)'; vrCtx.fillRect(0,0,1024,560); if (image.complete) vrCtx.drawImage(image, sx, sy, image.width / 2, image.height / 2, 0, 0, 360, 560);
   const fade = vrCtx.createLinearGradient(265, 0, 425, 0); fade.addColorStop(0, 'rgba(4,7,12,0)'); fade.addColorStop(1, 'rgba(4,7,12,.95)'); vrCtx.fillStyle = fade; vrCtx.fillRect(220,0,220,560);
   vrCtx.fillStyle = '#efb857'; vrCtx.font = '24px DM Mono, monospace'; vrCtx.fillText(place.region, 410, 110); vrCtx.fillStyle = '#fff4db'; vrCtx.font = 'bold 58px Georgia, serif'; vrCtx.fillText(place.name, 410, 185); vrCtx.fillStyle = '#c8cbd0'; vrCtx.font = '28px Manrope, sans-serif'; wrapText(vrCtx, place.desc, 410, 250, 540, 44); vrCtx.strokeStyle = '#efb857'; vrCtx.globalAlpha = .5; vrCtx.strokeRect(1, 1, 1022, 558); vrCtx.globalAlpha = 1;
   vrCard.material.map.needsUpdate = true;
 }
 function selectPlace(place) {
-  activePlace = place; cardRegion.textContent = place.region; cardTitle.textContent = place.name; cardDescription.textContent = place.desc; cardImage.style.backgroundPosition = place.crop; card.classList.add('visible');
+  activePlace = place; cardRegion.textContent = place.region; cardTitle.textContent = place.name; cardDescription.textContent = place.desc; cardImage.style.backgroundImage = `url('assets/${place.image === 'new' ? 'ethiopia-destinations-ii.png' : 'ethiopia-destinations.png'}')`; cardImage.style.backgroundPosition = place.crop; card.classList.add('visible');
+  selectable.forEach(hit => { hit.userData.label.visible = hit.userData.place === place; });
   paintVrCard(place); vrCard.visible = true;
 }
-document.querySelector('#close-card').addEventListener('click', () => { card.classList.remove('visible'); vrCard.visible = false; activePlace = null; });
+document.querySelector('#close-card').addEventListener('click', () => { card.classList.remove('visible'); vrCard.visible = false; activePlace = null; selectable.forEach(hit => { hit.userData.label.visible = false; }); });
 
 const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2();
 function findHit(ray) { const intersects = raycaster.intersectObjects(selectable, false); return intersects.length ? intersects[0].object : null; }
-function updateHover(hit) { if (hovered === hit) return; if (hovered) { hovered.userData.ring.material.color.set(0xf7bc55); hovered.userData.glow.scale.setScalar(1); } hovered = hit; canvas.style.cursor = hit ? 'pointer' : 'grab'; if (hit) { hit.userData.ring.material.color.set(0xffffff); hit.userData.glow.scale.setScalar(1.55); } }
+function updateHover(hit) { if (hovered === hit) return; if (hovered) { hovered.userData.ring.material.color.set(0xf7bc55); hovered.userData.glow.scale.setScalar(1); if (hovered.userData.place !== activePlace) hovered.userData.label.visible = false; } hovered = hit; canvas.style.cursor = hit ? 'pointer' : 'grab'; if (hit) { hit.userData.ring.material.color.set(0xffffff); hit.userData.glow.scale.setScalar(1.55); hit.userData.label.visible = true; } }
 canvas.addEventListener('pointermove', (e) => { pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raycaster.setFromCamera(pointer, camera); updateHover(findHit(raycaster)); });
 canvas.addEventListener('click', () => { if (hovered) selectPlace(hovered.userData.place); });
 
 const controllerFactory = new XRControllerModelFactory(); const handFactory = new XRHandModelFactory();
 for (let i = 0; i < 2; i++) {
-  const controller = renderer.xr.getController(i); const ray = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -4)]), new THREE.LineBasicMaterial({ color: 0xf6c464 })); ray.name = 'pointer-ray'; controller.add(ray); controller.addEventListener('selectstart', () => { raycaster.setFromXRController(controller); const hit = findHit(raycaster); if (hit) selectPlace(hit.userData.place); }); scene.add(controller);
-  const grip = renderer.xr.getControllerGrip(i); grip.add(controllerFactory.createControllerModel(grip)); scene.add(grip);
-  const hand = renderer.xr.getHand(i); hand.add(handFactory.createHandModel(hand, 'mesh')); scene.add(hand);
+  const controller = renderer.xr.getController(i); const ray = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -4)]), new THREE.LineBasicMaterial({ color: 0xf6c464 })); ray.name = 'pointer-ray'; controller.add(ray); controller.addEventListener('selectstart', () => { raycaster.setFromXRController(controller); const hit = findHit(raycaster); if (hit) selectPlace(hit.userData.place); }); playerRig.add(controller);
+  const grip = renderer.xr.getControllerGrip(i); grip.add(controllerFactory.createControllerModel(grip)); playerRig.add(grip);
+  const hand = renderer.xr.getHand(i); hand.add(handFactory.createHandModel(hand, 'mesh')); playerRig.add(hand);
 }
 
 function startVR() {
@@ -144,9 +181,8 @@ function doLocomotion(dt) { if (!renderer.xr.isPresenting) return; const session
 }
 function update(time) {
   const t = time * .001, dt = Math.min(clock.getDelta(), .05); doLocomotion(dt);
-  atmosphere.material.opacity = .095 + Math.sin(t * .8) * .025; globeSystem.rotation.y += dt * .004;
+  atmosphere.material.opacity = .095 + Math.sin(t * .8) * .025;
   selectable.forEach(hit => { const { ring, glow, label, seed } = hit.userData; const pulse = 1 + Math.sin(t * 2.3 + seed) * .16; ring.scale.setScalar(pulse); glow.scale.setScalar((hit === hovered ? 1.55 : 1) * pulse); label.material.opacity = .63 + Math.sin(t * 1.6 + seed) * .2; });
-  if (vrCard.visible) { vrCard.lookAt(camera.getWorldPosition(new THREE.Vector3())); vrCard.rotateY(Math.PI); }
   renderer.render(scene, camera);
 }
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
