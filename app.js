@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const canvas = document.querySelector('#scene');
 const loading = document.querySelector('#loading');
@@ -66,17 +65,6 @@ const globe = new THREE.Mesh(new THREE.SphereGeometry(globeRadius, 192, 128), ne
 mapRoot.add(globe);
 const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.018, 128, 96), new THREE.MeshBasicMaterial({ color: 0x4c9eff, transparent: true, opacity: .12, side: THREE.BackSide, blending: THREE.AdditiveBlending })); mapRoot.add(atmosphere);
 const halo = new THREE.Mesh(new THREE.SphereGeometry(globeRadius * 1.075, 96, 72), new THREE.MeshBasicMaterial({ color: 0x2f7fe8, transparent: true, opacity: .045, side: THREE.BackSide, blending: THREE.AdditiveBlending })); mapRoot.add(halo);
-const gltfLoader = new GLTFLoader();
-gltfLoader.load('assets/earth.glb', ({ scene: earthModel }) => {
-  const bounds = new THREE.Box3().setFromObject(earthModel); const size = bounds.getSize(new THREE.Vector3()); const center = bounds.getCenter(new THREE.Vector3());
-  const largestDimension = Math.max(size.x, size.y, size.z);
-  // Some downloaded globe GLBs contain a background shell or a non-standard scale.
-  // Keep the verified terrain globe visible until that asset can be explicitly calibrated.
-  if (!Number.isFinite(largestDimension) || largestDimension <= 0) return;
-  const pivot = new THREE.Group(); pivot.add(earthModel); earthModel.position.sub(center); pivot.scale.setScalar((globeRadius * 2) / largestDimension);
-  earthModel.traverse(node => { if (node.isMesh) { node.castShadow = false; node.receiveShadow = false; } });
-  pivot.visible = false; mapRoot.add(pivot);
-}, undefined, () => {});
 
 const destinations = [
   { id: 'lalibela', name: 'Lalibela', region: 'AMHARA HIGHLANDS', lat: 12.03, lon: 39.04, image: 'classic', crop: '0% 0%', desc: 'Carved from living rock in the 12th century, Lalibela’s sacred churches form one of the world’s most astonishing pilgrim landscapes.' },
