@@ -208,7 +208,12 @@ function doLocomotion(dt) { if (!renderer.xr.isPresenting) return; const session
 function update(time) {
   const t = time * .001, dt = Math.min(clock.getDelta(), .05); doLocomotion(dt);
   atmosphere.material.opacity = .095 + Math.sin(t * .8) * .025;
-  selectable.forEach(hit => { const { ring, glow, label, seed } = hit.userData; const pulse = 1 + Math.sin(t * 2.3 + seed) * .16; ring.scale.setScalar(pulse); glow.scale.setScalar((hit === hovered ? 1.55 : 1) * pulse); label.material.opacity = .63 + Math.sin(t * 1.6 + seed) * .2; });
+  selectable.forEach(hit => {
+    // The close control is selectable but is not a geographic hotspot.
+    if (!hit.userData.place) return;
+    const { ring, glow, label, seed } = hit.userData; const pulse = 1 + Math.sin(t * 2.3 + seed) * .16;
+    ring.scale.setScalar(pulse); glow.scale.setScalar((hit === hovered ? 1.55 : 1) * pulse); label.material.opacity = .63 + Math.sin(t * 1.6 + seed) * .2;
+  });
   renderer.render(scene, camera);
 }
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
