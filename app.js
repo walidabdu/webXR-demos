@@ -57,10 +57,9 @@ const terrainTexture = textureLoader.load('assets/earth-height.jpg');
 const normalTexture = textureLoader.load('assets/earth-normal.jpg');
 earthTexture.colorSpace = THREE.SRGBColorSpace;
 const globeSystem = new THREE.Group(); globeSystem.position.copy(globeCenter); world.add(globeSystem);
-// Three's equirectangular sphere places 90°E at the forward-facing meridian.
-// Shift by Ethiopia's central longitude so the texture and geographic vectors agree.
-const ethiopiaCentralLongitude = 39.5;
-const mapRoot = new THREE.Group(); mapRoot.rotation.y = THREE.MathUtils.degToRad(ethiopiaCentralLongitude - 90); globeSystem.add(mapRoot);
+// Three's SphereGeometry texture U axis runs west-to-east in the negative Z direction.
+// This rotation brings 39.5°E (Ethiopia) to the front while preserving true coordinates.
+const mapRoot = new THREE.Group(); mapRoot.rotation.y = THREE.MathUtils.degToRad(-129.5); globeSystem.add(mapRoot);
 const geoLayer = new THREE.Group(); mapRoot.add(geoLayer);
 const globe = new THREE.Mesh(new THREE.SphereGeometry(globeRadius, 192, 128), new THREE.MeshStandardMaterial({
   map: earthTexture, normalMap: normalTexture, normalScale: new THREE.Vector2(.7, .7), bumpMap: terrainTexture, bumpScale: .28, displacementMap: terrainTexture, displacementScale: .11, roughness: .66, metalness: .02
@@ -83,7 +82,7 @@ const destinations = [
 
 function pointOnGlobe(lat, lon, r = globeRadius) {
   const latitude = THREE.MathUtils.degToRad(lat), longitude = THREE.MathUtils.degToRad(lon);
-  return new THREE.Vector3(r * Math.cos(latitude) * Math.cos(longitude), r * Math.sin(latitude), r * Math.cos(latitude) * Math.sin(longitude));
+  return new THREE.Vector3(r * Math.cos(latitude) * Math.cos(longitude), r * Math.sin(latitude), -r * Math.cos(latitude) * Math.sin(longitude));
 }
 function makeLabel(text, normal) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 96; const x = c.getContext('2d');
@@ -124,12 +123,13 @@ function getDestinationImage(place) {
   destinationImages[place.id] = image; return image;
 }
 const vrCanvas = document.createElement('canvas'); vrCanvas.width = 1024; vrCanvas.height = 560; const vrCtx = vrCanvas.getContext('2d');
-const vrCard = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 1.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(vrCanvas), transparent: true, side: THREE.FrontSide, depthWrite: false }));
-vrCard.position.set(1.35, 1.48, -1.5); vrCard.visible = false; playerRig.add(vrCard);
+const vrPanel = new THREE.Group(); vrPanel.visible = false; scene.add(vrPanel);
+const vrCard = new THREE.Mesh(new THREE.PlaneGeometry(2.45, 1.35), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(vrCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+vrPanel.add(vrCard);
 const closeCanvas = document.createElement('canvas'); closeCanvas.width = 128; closeCanvas.height = 128; const closeCtx = closeCanvas.getContext('2d');
-closeCtx.fillStyle = '#15191f'; closeCtx.beginPath(); closeCtx.arc(64, 64, 57, 0, Math.PI * 2); closeCtx.fill(); closeCtx.strokeStyle = '#efb857'; closeCtx.lineWidth = 4; closeCtx.stroke(); closeCtx.fillStyle = '#fff3d8'; closeCtx.font = '58px Arial'; closeCtx.textAlign = 'center'; closeCtx.fillText('×', 64, 83);
-const vrClose = new THREE.Mesh(new THREE.PlaneGeometry(.27, .27), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(closeCanvas), transparent: true, depthWrite: false }));
-vrClose.position.set(2.83, 2.18, -1.48); vrClose.visible = false; vrClose.userData.action = 'close'; selectable.push(vrClose); playerRig.add(vrClose);
+closeCtx.fillStyle = '#f3bd5b'; closeCtx.beginPath(); closeCtx.arc(64, 64, 54, 0, Math.PI * 2); closeCtx.fill(); closeCtx.fillStyle = '#151006'; closeCtx.font = '600 56px Arial'; closeCtx.textAlign = 'center'; closeCtx.textBaseline = 'middle'; closeCtx.fillText('×', 64, 61);
+const vrClose = new THREE.Mesh(new THREE.PlaneGeometry(.18, .18), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(closeCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+vrClose.position.set(1.10, .54, .015); vrClose.visible = false; vrClose.userData.action = 'close'; selectable.push(vrClose); vrPanel.add(vrClose);
 function wrapText(ctx, text, x, y, width, lineHeight) { const words = text.split(' '); let line = ''; for (const word of words) { const next = line + word + ' '; if (ctx.measureText(next).width > width && line) { ctx.fillText(line, x, y); line = word + ' '; y += lineHeight; } else line = next; } ctx.fillText(line, x, y); }
 function paintVrCard(place) {
   const image = getDestinationImage(place);
@@ -141,9 +141,9 @@ function paintVrCard(place) {
 function selectPlace(place) {
   activePlace = place; cardRegion.textContent = place.region; cardTitle.textContent = place.name; cardDescription.textContent = place.desc; cardImage.style.backgroundImage = `url('${realPhotos[place.id]}')`; cardImage.style.backgroundPosition = 'center'; card.classList.add('visible');
   selectable.forEach(hit => { if (hit.userData.label) hit.userData.label.visible = hit.userData.place === place; });
-  paintVrCard(place); vrCard.position.set(1.35, 1.48, -1.5); vrCard.rotation.set(0, 0, 0); vrCard.visible = true; vrClose.visible = true;
+  paintVrCard(place); vrPanel.visible = true; vrClose.visible = true;
 }
-function closePlaceCard() { card.classList.remove('visible'); vrCard.visible = false; vrClose.visible = false; activePlace = null; selectable.forEach(hit => { if (hit.userData.label) hit.userData.label.visible = false; }); }
+function closePlaceCard() { card.classList.remove('visible'); vrPanel.visible = false; vrClose.visible = false; activePlace = null; selectable.forEach(hit => { if (hit.userData.label) hit.userData.label.visible = false; }); }
 document.querySelector('#close-card').addEventListener('click', closePlaceCard);
 
 const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2();
@@ -177,6 +177,15 @@ function doLocomotion(dt) { if (!renderer.xr.isPresenting) return; const session
 function update(time) {
   const t = time * .001, dt = Math.min(clock.getDelta(), .05); doLocomotion(dt);
   atmosphere.material.opacity = .095 + Math.sin(t * .8) * .025;
+  if (vrPanel.visible) {
+    const headset = camera.getWorldPosition(new THREE.Vector3());
+    const forward = camera.getWorldDirection(new THREE.Vector3()); forward.y = 0; forward.normalize();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    vrPanel.position.copy(headset).addScaledVector(forward, 1.45).addScaledVector(right, .78);
+    vrPanel.position.y -= .12;
+    vrPanel.lookAt(headset);
+    vrPanel.rotateY(Math.PI);
+  }
   selectable.forEach(hit => {
     // The close control is selectable but is not a geographic hotspot.
     if (!hit.userData.place) return;
